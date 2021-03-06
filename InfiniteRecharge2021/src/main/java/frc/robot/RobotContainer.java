@@ -9,9 +9,17 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+
+import frc.robot.subsystems.Drivetrain;
+
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.Command;
+
+import frc.robot.Constants.DriveConstants;
+import frc.robot.commands.SwerveSimCommand;
 
 /**
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -21,18 +29,36 @@ import edu.wpi.first.wpilibj2.command.Command;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
-  private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
-
+  private final Drivetrain m_drivetrain;
+  private final JoystickButton[] joystickButtons0;
+  private final JoystickButton[] joystickButtons1;
+  private final Joystick joystick0;
+  private final Joystick joystick1;
 
 
   /**
    * The container for the robot.  Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    joystick0 = new Joystick(DriveConstants.JOYSTICK_0);
+    joystick1 = new Joystick(DriveConstants.JOYSTICK_1);
+    joystickButtons0 = new JoystickButton[DriveConstants.NUM_JOYSTICK_BUTTONS];
+    joystickButtons1 = new JoystickButton[DriveConstants.NUM_JOYSTICK_BUTTONS];
+    for(int i = 1; i <= DriveConstants.NUM_JOYSTICK_BUTTONS; i++) {
+      joystickButtons0[i-1] = new JoystickButton(joystick0, i);
+      joystickButtons1[i-1] = new JoystickButton(joystick1, i);
+    }
+
     // Configure the button bindings
     configureButtonBindings();
+
+    // instantiate subsystems
+    m_drivetrain = new Drivetrain();
+    
+    //initialize default commands
+    // TODO Revert to default field relative
+    // m_drivetrain.setDefaultCommand(new RunCommand(() -> m_drivetrain.drive(joystick1.getX(), joystick0.getY(), -1*joystick0.getRawAxis(5), true), m_drivetrain));
+    m_drivetrain.setDefaultCommand(new RunCommand(() -> m_drivetrain.drive(joystick1.getX(), joystick0.getY(), -1*joystick0.getRawAxis(5), false), m_drivetrain));
   }
 
   /**
@@ -42,6 +68,15 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+
+    // drivetrain button bindings
+    //joystickButtons0[DriveConstants.JOYSTICK_INVERT_BUTTON].whenPressed(new InstantCommand(() -> m_drivetrain.invertMotors()));
+    //TODO: changed from .whileHeld to .whenHeld, untested change, revert back to .whileHeld if doesn't work
+    //joystickButtons0[DriveConstants.JOYSTICK_HIGHGEAR_BUTTON].whenHeld(new RunCommand(() -> m_drivetrain.setGear(false)));
+    //joystickButtons0[DriveConstants.JOYSTICK_HIGHGEAR_BUTTON].whenReleased(new RunCommand(() -> m_drivetrain.setGear(true)));
+    joystickButtons0[DriveConstants.JOYSTICK_XSTANCE_BUTTON].whenHeld(new InstantCommand(() -> m_drivetrain.disableJoystickControls()));
+    joystickButtons0[DriveConstants.JOYSTICK_XSTANCE_BUTTON].whileHeld(new RunCommand(() -> m_drivetrain.setXStance()));
+    joystickButtons0[DriveConstants.JOYSTICK_XSTANCE_BUTTON].whenReleased(new InstantCommand(() -> m_drivetrain.enableJoystickControls()));
   }
 
 
@@ -52,6 +87,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
-    return m_autoCommand;
+    // Replace null with auto command
+    return new SwerveSimCommand();
   }
 }
